@@ -11,6 +11,7 @@ export type CompetitionAction =
   | { type: 'activateContestant'; contestantId: string }
   | { type: 'updateQueue'; queue: Contestant[] }
   | { type: 'updateJudges'; judges: Judge[] }
+  | { type: 'updateSettings'; title: string }
   | { type: 'deleteHistory'; id: string }
   | { type: 'clearHistory' };
 
@@ -112,8 +113,8 @@ function applyAction(state: CompetitionState, action: CompetitionAction): Compet
   switch (action.type) {
     case 'submitScore': {
       if (!['judge_a', 'judge_b', 'judge_c'].includes(action.judgeId)) throw new Error('未找到指定专家');
-      if (typeof action.score !== 'number' || action.score < 1 || action.score > 10) {
-        throw new Error('评分必须在 1 到 10 之间');
+      if (!Number.isInteger(action.score) || action.score < 5 || action.score > 10) {
+        throw new Error('评分必须为 5 到 10 之间的整数');
       }
       const judge = state.judges.find((item) => item.id === action.judgeId);
       if (!judge) throw new Error('未找到指定专家');
@@ -170,6 +171,10 @@ function applyAction(state: CompetitionState, action: CompetitionAction): Compet
           isOnline: existing?.isOnline ?? true,
         };
       });
+      break;
+    case 'updateSettings':
+      if (typeof action.title !== 'string' || !action.title.trim()) throw new Error('赛事标题不能为空');
+      state.settings = { ...state.settings, title: action.title.trim() };
       break;
     case 'deleteHistory':
       state.history = state.history.filter((item) => item.id !== action.id);

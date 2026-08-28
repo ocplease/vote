@@ -3,14 +3,11 @@ import {
   CheckCircle2,
   Send,
   RotateCcw,
-  Sparkles,
   Tv,
-  Award,
   Radio,
-  Sliders,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import type { Judge, Contestant, CompetitionState, JudgeId } from '../types';
+import type { Judge, CompetitionState, JudgeId } from '../types';
 import { playScoreClick, playJudgeReveal } from '../utils/audio';
 
 interface JudgeScoringViewProps {
@@ -22,20 +19,14 @@ interface JudgeScoringViewProps {
 
 const SCORE_LABELS: { [key: number]: string } = {
   10: '🌟 完美绝伦 / 顶级表现',
-  9.5: '🔥 极致优秀 / 几乎无可挑剔',
   9: '✨ 卓越出众 / 表现亮眼',
-  8.5: '👏 优异扎实 / 亮点突出',
   8: '👍 良好发挥 / 结构完整',
-  7.5: '👌 良好达标 / 有所创新',
   7: '⚖️ 中规中矩 / 符合预期',
-  6.5: '💡 尚有提升空间',
   6: '⚠️ 刚达及格标准',
   5: '📉 需进一步完善',
-  4: '🛠️ 项目成熟度不足',
-  3: '❌ 存在明显短板',
-  2: '🚫 未达参赛基本要求',
-  1: '⛔ 严重不符合标准',
 };
+
+const SCORE_OPTIONS = [5, 6, 7, 8, 9, 10] as const;
 
 export const JudgeScoringView: React.FC<JudgeScoringViewProps> = ({
   currentJudge,
@@ -44,7 +35,6 @@ export const JudgeScoringView: React.FC<JudgeScoringViewProps> = ({
   onSwitchRole,
 }) => {
   const [selectedScore, setSelectedScore] = useState<number>(currentJudge.score || 9);
-  const [isHalfStep, setIsHalfStep] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isEditing, setIsEditing] = useState<boolean>(false);
 
@@ -86,9 +76,6 @@ export const JudgeScoringView: React.FC<JudgeScoringViewProps> = ({
   const handleEditScore = () => {
     setIsEditing(true);
   };
-
-  // Quick integer list 1 to 10
-  const integerScores = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
   // Count how many judges submitted
   const submittedCount = state.judges.filter((j) => j.submitted).length;
@@ -196,27 +183,16 @@ export const JudgeScoringView: React.FC<JudgeScoringViewProps> = ({
           </div>
         </div>
 
-        {/* 1 - 10 Score Pad with Artistic Flair buttons */}
+        {/* 5 - 10 integer score pad */}
         <div className="bg-zinc-900/60 border border-white/10 p-5 rounded-3xl backdrop-blur-md shadow-2xl">
-          {/* Half Step Toggle */}
           <div className="flex items-center justify-between mb-4 px-1">
             <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">分值选项板</span>
-            <button
-              onClick={() => setIsHalfStep(!isHalfStep)}
-              className={`text-xs px-3 py-1 rounded-xl border transition-all font-bold flex items-center gap-1.5 ${
-                isHalfStep
-                  ? 'bg-cyan-500/20 border-cyan-400/60 text-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.3)]'
-                  : 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:text-white'
-              }`}
-            >
-              <Sliders className="w-3.5 h-3.5" />
-              {isHalfStep ? '已开启 0.5 细分' : '开启 0.5 微调'}
-            </button>
+            <span className="text-xs text-cyan-300 font-mono">仅限 5–10 整数分</span>
           </div>
 
           {/* Main Integer Grid */}
-          <div className="grid grid-cols-5 gap-2.5 sm:gap-3">
-            {integerScores.map((score) => {
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5 sm:gap-3">
+            {SCORE_OPTIONS.map((score) => {
               const isSelected = selectedScore === score;
               return (
                 <button
@@ -244,28 +220,6 @@ export const JudgeScoringView: React.FC<JudgeScoringViewProps> = ({
             })}
           </div>
 
-          {/* Half Step Options */}
-          {isHalfStep && (
-            <div className="mt-4 pt-3 border-t border-white/10 grid grid-cols-5 gap-2 animate-fadeIn">
-              {[5.5, 6.5, 7.5, 8.5, 9.5].map((half) => {
-                const isSelected = selectedScore === half;
-                return (
-                  <button
-                    key={half}
-                    onClick={() => handleSelectScore(half)}
-                    disabled={isLocked}
-                    className={`py-2.5 rounded-xl font-bold text-sm font-mono transition-all active:scale-95 ${
-                      isSelected
-                        ? 'bg-cyan-400 text-black shadow-[0_0_15px_rgba(6,182,212,0.4)] font-black'
-                        : 'bg-zinc-800/80 text-zinc-300 border border-white/10 hover:bg-white hover:text-black'
-                    }`}
-                  >
-                    {half}
-                  </button>
-                );
-              })}
-            </div>
-          )}
         </div>
 
         {/* Live Status indicator */}

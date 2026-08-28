@@ -10,18 +10,14 @@ import {
   Settings,
   ArrowRight,
   RotateCcw,
-  Sparkles,
-  Award,
   Radio,
   Clock,
   CheckCircle2,
   Flame,
-  ChevronDown,
-  ChevronUp,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
-import type { CompetitionState, Judge, Contestant, JudgeId } from '../types';
+import type { CompetitionState, JudgeId } from '../types';
 import {
   playHeartbeat,
   playJudgeReveal,
@@ -43,6 +39,8 @@ interface BigScreenViewProps {
   onSwitchRole: (role: string) => void;
 }
 
+const SCORE_OPTIONS = [5, 6, 7, 8, 9, 10] as const;
+
 export const BigScreenView: React.FC<BigScreenViewProps> = ({
   state,
   onSubmitScore,
@@ -55,7 +53,6 @@ export const BigScreenView: React.FC<BigScreenViewProps> = ({
 }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [soundOn, setSoundOn] = useState(true);
-  const [showSimBar, setShowSimBar] = useState(true);
   const [displayedTotal, setDisplayedTotal] = useState(0);
 
   const prevCompletedRef = useRef(false);
@@ -362,10 +359,10 @@ export const BigScreenView: React.FC<BigScreenViewProps> = ({
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1, duration: 0.4 }}
-                className={`relative rounded-3xl p-6 sm:p-8 flex flex-col items-center justify-between text-center min-h-[340px] sm:min-h-[380px] transition-all duration-500 overflow-hidden ${
+                className={`relative rounded-3xl p-5 sm:p-6 flex flex-col items-center justify-between text-center min-h-[430px] transition-all duration-500 overflow-hidden ${
                   isDone
                     ? 'bg-zinc-900/60 border border-white/20 backdrop-blur-md shadow-[0_0_40px_rgba(255,255,255,0.15)] group'
-                    : 'bg-zinc-900/40 border border-zinc-800/80 opacity-50 grayscale scale-95 backdrop-blur-sm'
+                    : 'bg-zinc-900/50 border border-zinc-800/80 backdrop-blur-sm'
                 }`}
               >
                 {/* Background Ambient Glow */}
@@ -386,78 +383,78 @@ export const BigScreenView: React.FC<BigScreenViewProps> = ({
                   <div className="text-xs text-zinc-400 font-medium">{judge.name}</div>
                 </div>
 
-                {/* Center Content: Hidden Suspense or White Stroke Avatar + Score */}
-                <div className="relative z-10 my-auto flex flex-col items-center justify-center space-y-5">
+                {/* Expert avatar, per-expert quick scoring, and live result */}
+                <div className="relative z-10 my-auto flex w-full flex-col items-center justify-center gap-4">
+                  <motion.div
+                    layout
+                    className="relative group"
+                  >
+                    <div className={`absolute -inset-4 rounded-full blur-xl ${isDone ? 'bg-white/15 animate-pulse' : 'bg-white/5'}`}></div>
+                    <div className={`w-28 h-28 sm:w-32 sm:h-32 rounded-full overflow-hidden relative z-10 ${isDone ? 'border-4 border-white shadow-[0_0_30px_rgba(255,255,255,0.4)]' : 'border-2 border-zinc-600'}`}>
+                      <img
+                        src={judge.avatar}
+                        alt={judge.name}
+                        className="w-full h-full object-cover [image-rendering:auto]"
+                      />
+                    </div>
+                    <div className={`absolute -bottom-2 right-0 ${isDone ? judgeBadgeColors : 'bg-zinc-700 text-zinc-200'} px-3 py-1 text-xs font-black rounded-full z-20 uppercase tracking-wider`}>
+                      {judge.shortName}
+                    </div>
+                  </motion.div>
+
+                  <div className="w-full rounded-2xl border border-white/10 bg-zinc-950/70 p-3">
+                    <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
+                      现场快速模拟打分
+                    </div>
+                    <div className="grid grid-cols-6 gap-1.5">
+                      {SCORE_OPTIONS.map((score) => (
+                        <button
+                          key={score}
+                          onClick={() => {
+                            playScoreClick();
+                            onSubmitScore(judge.id, score);
+                          }}
+                          aria-label={`${judge.name}打${score}分`}
+                          className={`h-9 rounded-lg font-mono text-sm font-black transition-all active:scale-90 ${
+                            judge.score === score
+                              ? 'bg-white text-black shadow-[0_0_15px_rgba(255,255,255,0.4)]'
+                              : 'bg-zinc-800 text-zinc-300 border border-white/10 hover:bg-white hover:text-black'
+                          }`}
+                        >
+                          {score}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
                   <AnimatePresence mode="wait">
                     {!isDone ? (
-                      /* STATE 1: WAITING / SUSPENSE RADAR */
                       <motion.div
                         key="waiting-state"
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.8 }}
-                        className="flex flex-col items-center justify-center space-y-4 py-2"
+                        className="text-center"
                       >
-                        {/* Mystery Pulse Avatar Placeholder */}
-                        <div className="relative mb-2">
-                          <div className="w-32 h-32 rounded-full border-2 border-zinc-700 overflow-hidden bg-zinc-900/50 flex flex-col items-center justify-center space-y-2">
-                            <div className="w-8 h-8 rounded-full border-2 border-zinc-700 animate-pulse"></div>
-                            <div className="w-12 h-1 bg-zinc-700 rounded-full animate-pulse"></div>
-                          </div>
-                          <div className="absolute -bottom-2 right-0 bg-zinc-700 text-zinc-400 font-black px-3 py-1 text-xs rounded-full uppercase tracking-wider">
-                            {judge.shortName}
-                          </div>
-                        </div>
-
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-zinc-600 tracking-widest">
-                            评分中...
-                          </div>
-                          <div className="text-xs text-zinc-700 font-bold uppercase tracking-tighter mt-1">
-                            等待提交 · WAITING
-                          </div>
+                        <div className="text-xl font-bold text-zinc-500 tracking-widest">评分中...</div>
+                        <div className="text-xs text-zinc-600 font-bold uppercase tracking-tighter mt-1">
+                          等待提交 · WAITING
                         </div>
                       </motion.div>
                     ) : (
-                      /* STATE 2: REVEALED WHITE-STROKE AVATAR + SCORE POP-IN */
                       <motion.div
                         key="revealed-state"
-                        initial={{ opacity: 0, scale: 0.4, rotate: -5 }}
-                        animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                        initial={{ opacity: 0, scale: 0.4 }}
+                        animate={{ opacity: 1, scale: 1 }}
                         transition={{ type: 'spring', stiffness: 350, damping: 18 }}
-                        className="flex flex-col items-center justify-center space-y-4 py-2"
+                        className="text-center"
                       >
-                        {/* WHITE OUTLINED AVATAR (Artistic Flair Spec) */}
-                        <div className="relative mb-3 group">
-                          {/* Blur ambient glow */}
-                          <div className="absolute -inset-4 bg-white/15 rounded-full blur-xl animate-pulse"></div>
-                          <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-white shadow-[0_0_30px_rgba(255,255,255,0.4)] overflow-hidden relative z-10">
-                            <img
-                              src={judge.avatar}
-                              alt={judge.name}
-                              referrerPolicy="no-referrer"
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <div className={`absolute -bottom-2 right-0 ${judgeBadgeColors} px-3 py-1 text-xs rounded-full z-20 uppercase tracking-wider`}>
-                            {judge.shortName}
-                          </div>
+                        <div className={`text-5xl sm:text-6xl font-black text-white ${scoreDropShadow} font-mono tracking-tight`}>
+                          {judge.score}
                         </div>
-
-                        {/* POPPING HIGH CONTRAST SCORE */}
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          transition={{ delay: 0.15, type: 'spring', stiffness: 450, damping: 15 }}
-                          className="text-center"
-                        >
-                          <div className={`text-6xl sm:text-7xl font-black text-white ${scoreDropShadow} font-mono tracking-tight`}>
-                            {judge.score?.toFixed(judge.score % 1 === 0 ? 0 : 1)}
-                          </div>
-                          <div className={`text-xs ${scoreSubLabel} font-bold uppercase tracking-tighter mt-1`}>
-                            已提交 · SUBMITTED
-                          </div>
-                        </motion.div>
+                        <div className={`text-xs ${scoreSubLabel} font-bold uppercase tracking-tighter mt-1`}>
+                          已提交 · SUBMITTED
+                        </div>
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -554,13 +551,13 @@ export const BigScreenView: React.FC<BigScreenViewProps> = ({
         </AnimatePresence>
       </main>
 
-      {/* BOTTOM: Direct Fast-Testing Simulator Bar */}
+      {/* BOTTOM: Role switching shortcuts */}
       <footer className="relative z-20 bg-zinc-950/90 border-t border-white/10 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-6 py-2.5 flex items-center justify-between text-xs text-zinc-400">
           <div className="flex items-center gap-4 flex-wrap">
             <span className="font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
               <Users className="w-3.5 h-3.5 text-cyan-400" />
-              快捷模拟与角色切换：
+              角色切换：
             </span>
             <div className="flex items-center gap-2">
               <button
@@ -590,48 +587,8 @@ export const BigScreenView: React.FC<BigScreenViewProps> = ({
             </div>
           </div>
 
-          <button
-            onClick={() => setShowSimBar(!showSimBar)}
-            className="flex items-center gap-1 text-zinc-400 hover:text-white transition-colors font-medium"
-          >
-            <span>{showSimBar ? '收起单屏快捷打分器' : '展开单屏快捷打分器'}</span>
-            {showSimBar ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
-          </button>
+          <span className="hidden sm:inline font-mono text-zinc-600">5–10 INTEGER SCORING</span>
         </div>
-
-        {/* Collapsible Fast Score Buttons styled with Artistic Flair tokens */}
-        {showSimBar && (
-          <div className="bg-zinc-900/60 border-t border-white/10 px-6 py-4 backdrop-blur-md">
-            <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-              <div className="text-xs font-bold text-zinc-400 uppercase tracking-[0.2em]">
-                现场快速模拟打分 (点击直接更新大屏)：
-              </div>
-              <div className="flex flex-wrap items-center gap-5 sm:gap-6">
-                {judges.map((j) => (
-                  <div key={j.id} className="flex items-center gap-1.5 text-xs">
-                    <span className="font-black text-zinc-300 uppercase">{j.shortName}:</span>
-                    {[7, 8, 8.5, 9, 9.5, 10].map((score) => (
-                      <button
-                        key={score}
-                        onClick={() => {
-                          playScoreClick();
-                          onSubmitScore(j.id, score);
-                        }}
-                        className={`w-9 h-9 rounded-xl font-bold flex items-center justify-center transition-all active:scale-95 ${
-                          j.score === score
-                            ? 'bg-white text-black shadow-[0_0_15px_rgba(255,255,255,0.4)]'
-                            : 'bg-zinc-800 border border-white/10 text-zinc-300 hover:bg-white hover:text-black'
-                        }`}
-                      >
-                        {score}
-                      </button>
-                    ))}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
       </footer>
     </div>
   );

@@ -1,6 +1,6 @@
 {
-  "name": "比赛实时评分系统",
-  "description": "专为赛事现场与远程评委设计的实时打分大屏展示系统，支持三位评委独立打分、白色描边头像动态揭晓、总分核算特效与比赛排行榜。",
+  "name": "内容平台2026 SKILLATHON总决赛",
+  "description": "专为赛事现场与远程专家设计的实时打分系统，支持三位专家独立打分、像素风头像、总分核算特效与比赛排行榜。",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
