@@ -1,4 +1,4 @@
-import type { CompetitionState, Contestant, Judge } from './types';
+import type { CompetitionState, Contestant, Judge } from './types.js';
 
 export const defaultContestants: Contestant[] = [
   {

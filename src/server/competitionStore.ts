@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
-import type { CompetitionState, Contestant, Judge, JudgeId, ScoreRecord } from '../types';
-import { createDefaultState } from '../defaultState';
+import type { CompetitionState, Contestant, Judge, JudgeId, ScoreRecord } from '../types.js';
+import { createDefaultState } from '../defaultState.js';
 
 export type CompetitionAction =
   | { type: 'submitScore'; judgeId: JudgeId; score: number }

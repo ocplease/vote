@@ -6,7 +6,7 @@ import {
   dispatchCompetitionAction,
   getCompetitionState,
   type CompetitionAction,
-} from './src/server/competitionStore';
+} from './src/server/competitionStore.js';
 
 const PORT = Number(process.env.PORT || 3000);
 const app = express();
