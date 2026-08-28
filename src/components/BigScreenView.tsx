@@ -62,6 +62,11 @@ export const BigScreenView: React.FC<BigScreenViewProps> = ({
   const prevSubmittedJudgesRef = useRef<{ [key: string]: boolean }>({});
 
   const { currentContestant, judges, allCompleted } = state;
+  const jA = judges.find((j) => j.id === 'judge_a')?.score || 0;
+  const jB = judges.find((j) => j.id === 'judge_b')?.score || 0;
+  const jC = judges.find((j) => j.id === 'judge_c')?.score || 0;
+  const grandTotal = Number((jA + jB + jC).toFixed(2));
+  const grandAverage = Number((grandTotal / 3).toFixed(2));
 
   // Sound toggle handler
   const handleToggleSound = () => {
@@ -106,22 +111,20 @@ export const BigScreenView: React.FC<BigScreenViewProps> = ({
   // Trigger celebration when all judges complete
   useEffect(() => {
     if (allCompleted && !prevCompletedRef.current) {
+      // Lock immediately so polling updates cannot replay the celebration.
+      prevCompletedRef.current = true;
+
       // Grand Total fanfare + confetti!
       playGrandTotalFanfare();
       triggerConfetti();
 
       // Animate total score count up
-      const jA = judges.find((j) => j.id === 'judge_a')?.score || 0;
-      const jB = judges.find((j) => j.id === 'judge_b')?.score || 0;
-      const jC = judges.find((j) => j.id === 'judge_c')?.score || 0;
-      const total = Number((jA + jB + jC).toFixed(2));
-
       let current = 0;
-      const step = total / 20;
+      const step = grandTotal / 20;
       const timer = setInterval(() => {
         current += step;
-        if (current >= total) {
-          setDisplayedTotal(total);
+        if (current >= grandTotal) {
+          setDisplayedTotal(grandTotal);
           clearInterval(timer);
         } else {
           setDisplayedTotal(Number(current.toFixed(1)));
@@ -129,11 +132,13 @@ export const BigScreenView: React.FC<BigScreenViewProps> = ({
       }, 35);
 
       return () => clearInterval(timer);
-    } else if (!allCompleted) {
+    }
+
+    if (!allCompleted) {
+      prevCompletedRef.current = false;
       setDisplayedTotal(0);
     }
-    prevCompletedRef.current = allCompleted;
-  }, [allCompleted, judges]);
+  }, [allCompleted, grandTotal]);
 
   // Heartbeat sound every 4 seconds while waiting if at least 1 judge has not submitted
   useEffect(() => {
@@ -171,13 +176,6 @@ export const BigScreenView: React.FC<BigScreenViewProps> = ({
     playNextWhoosh();
     onResetNext();
   };
-
-  // Calculate sum and average
-  const jA = judges.find((j) => j.id === 'judge_a')?.score || 0;
-  const jB = judges.find((j) => j.id === 'judge_b')?.score || 0;
-  const jC = judges.find((j) => j.id === 'judge_c')?.score || 0;
-  const grandTotal = Number((jA + jB + jC).toFixed(2));
-  const grandAverage = Number((grandTotal / 3).toFixed(2));
 
   const submittedCount = judges.filter((j) => j.submitted).length;
 
