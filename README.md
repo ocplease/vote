@@ -45,6 +45,8 @@ npm run build
 
 “选手/团队”和“参赛项目”为必填。导入前会展示预览，确认后追加到候场队列；当前项目和候场项目都可直接编辑。
 
+导入器会自动识别 UTF-8、UTF-8 BOM、GBK/GB18030 和 UTF-16 编码。直接使用 Excel 导出的中文 CSV 即可，无需手动转码。
+
 ## Vercel 部署与数据持久化
 
 项目使用 Vercel Functions 提供 API。生产环境应在 Vercel Marketplace 安装 Upstash Redis，Vercel 会自动注入：

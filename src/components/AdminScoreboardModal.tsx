@@ -58,6 +58,32 @@ function parseCsv(text: string): string[][] {
   return rows;
 }
 
+function decodeCsv(buffer: ArrayBuffer): { text: string; encoding: string } {
+  const bytes = new Uint8Array(buffer);
+
+  if (bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf) {
+    return { text: new TextDecoder('utf-8').decode(bytes.subarray(3)), encoding: 'UTF-8 BOM' };
+  }
+  if (bytes[0] === 0xff && bytes[1] === 0xfe) {
+    return { text: new TextDecoder('utf-16le').decode(bytes.subarray(2)), encoding: 'UTF-16 LE' };
+  }
+  if (bytes[0] === 0xfe && bytes[1] === 0xff) {
+    return { text: new TextDecoder('utf-16be').decode(bytes.subarray(2)), encoding: 'UTF-16 BE' };
+  }
+
+  try {
+    return {
+      text: new TextDecoder('utf-8', { fatal: true }).decode(bytes),
+      encoding: 'UTF-8',
+    };
+  } catch {
+    return {
+      text: new TextDecoder('gb18030').decode(bytes),
+      encoding: 'GBK/GB18030',
+    };
+  }
+}
+
 function contestantsFromCsv(text: string): Contestant[] {
   const rows = parseCsv(text);
   if (!rows.length) return [];
@@ -169,12 +195,15 @@ export const AdminScoreboardModal: React.FC<AdminScoreboardModalProps> = ({
   const handleCsvFile = async (file?: File) => {
     if (!file) return;
     try {
-      const parsed = contestantsFromCsv(await file.text());
+      const decoded = decodeCsv(await file.arrayBuffer());
+      const parsed = contestantsFromCsv(decoded.text);
       setImportPreview(parsed);
-      setImportMessage(parsed.length ? `已识别 ${parsed.length} 个有效参赛项目，请确认后导入。` : '未识别到有效项目，请检查表头和必填字段。');
+      setImportMessage(parsed.length
+        ? `已按 ${decoded.encoding} 识别 ${parsed.length} 个有效参赛项目，请确认后导入。`
+        : `已按 ${decoded.encoding} 读取，但未识别到有效项目，请检查表头和必填字段。`);
     } catch {
       setImportPreview([]);
-      setImportMessage('CSV 文件读取失败，请重新选择。');
+      setImportMessage('CSV 文件读取失败；请使用 UTF-8、GBK 或 GB18030 编码后重试。');
     }
   };
 
