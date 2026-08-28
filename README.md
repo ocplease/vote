@@ -52,6 +52,8 @@ npm run build
 - `UPSTASH_REDIS_REST_URL`
 - `UPSTASH_REDIS_REST_TOKEN`
 
+部分 Vercel Marketplace 项目使用兼容变量名 `KV_REST_API_URL` 和 `KV_REST_API_TOKEN`，应用同时支持这两组变量。
+
 可选设置 `COMPETITION_STATE_KEY`，用于同一 Redis 中隔离不同比赛。未配置 Redis 时会回退到进程内存，仅适合本地开发，不建议用于正式投票。
 
 部署：
